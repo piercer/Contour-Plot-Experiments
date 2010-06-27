@@ -11,7 +11,7 @@ package
 
 		private static const WIDTH:Number = 600;
 		private static const HEIGHT:Number = 600;
-		private static const NPOINTS:Number = 20;
+		private static const NPOINTS:Number = 50;
 
 		private var _data:Array;
 		private var _zmax:Number;
@@ -27,7 +27,7 @@ package
 				{
 					var d:Number=Math.sqrt((i-50)*(i-50)+(j-50)*(j-50));
 					var d2:Number=Math.sqrt((i-150)*(i-150)+(j-50)*(j-50));
-					_data[i][j] = Math.random()*50+Math.sin(d*Math.PI/10)*200+Math.cos(d2*Math.PI/10)*200;
+					_data[i][j] = Math.sin(d*Math.PI/10)*200+Math.cos(d2*Math.PI/10)*200;
 				}
 			}
 			plotContours(20);
@@ -111,41 +111,52 @@ package
 
 			for (i=0;i<NPOINTS-1;i++)
 			{
-
+				
+				var im:Number = i+0.5;
+				var x20:Number = i*dx;
+				var x31:Number = x20+dx;
+				
 				for (j=0;j<NPOINTS-1;j++)
 				{
+					
 					var p0:Number = _data[i][j];
 					var p1:Number = _data[i+1][j];
 					var p2:Number = _data[i][j+1];
 					var p3:Number = _data[i+1][j+1];
 					var p4:Number = (p0+p1+p2+p3)/4;
+					var jm:Number = j+0.5;
+					var y10:Number = j*dy;
+					var y32:Number = y10+dy;
 
 					for (k=0;k<nContours;k++)
 					{
 						var contourValue:Number = contourValues[k];
-						var d40:Number = 0.5*(contourValue-p0)/(p4-p0);
-						var d42:Number = 0.5*(contourValue-p2)/(p4-p2);
-						var d14:Number = 0.5*(contourValue-p4)/(p1-p4);
-						var d34:Number = 0.5*(contourValue-p4)/(p3-p4);
-						var d20:Number = (contourValue-p0)/(p2-p0);
-						var d10:Number = (contourValue-p0)/(p1-p0);
-						var d31:Number = (contourValue-p1)/(p3-p1);
-						var d32:Number = (contourValue-p2)/(p3-p2);
-						var x42:Number = (i+d42)*dx;
-						var y42:Number = (j+1-d42)*dy;
-						var x34:Number = (i+0.5+d34)*dx;
-						var y34:Number = (j+0.5+d34)*dy;
-						var x14:Number = (i+0.5+d14)*dx;
-						var y14:Number = (j+0.5-d14)*dy;
-						var x40:Number = (i+d40)*dx;
-						var y40:Number = (j+d40)*dy;
+
+						var dp0:Number = contourValue-p0;
+						var dp1:Number = contourValue-p1;
+						var dp2:Number = contourValue-p2;
+						var dp4:Number = 0.5*(contourValue-p4);
 						
-						var x20:Number = i*dx;
-						var x31:Number = x20+dx;
-
-						var y10:Number = j*dy;
-						var y32:Number = y10+dy;
-
+						var d04:Number = dp4/(p0-p4);
+						var d14:Number = dp4/(p1-p4);
+						var d24:Number = dp4/(p2-p4);
+						var d34:Number = dp4/(p3-p4);
+						
+						var d20:Number = dp0/(p2-p0);
+						var d10:Number = dp0/(p1-p0);
+						var d31:Number = dp1/(p3-p1);
+						var d32:Number = dp2/(p3-p2);
+												
+						var x24:Number = (im-d24)*dx;
+						var y24:Number = (jm+d24)*dy;
+						
+						var x34:Number = (im+d34)*dx;
+						var y34:Number = (jm+d34)*dy;
+						var x14:Number = (im+d14)*dx;
+						var y14:Number = (jm-d14)*dy;
+						var x04:Number = (im-d04)*dx;
+						var y04:Number = (jm-d04)*dy;
+						
 						var x32:Number = (i+d32)*dx;
 						var y31:Number = (j+d31)*dy;
 						var y20:Number = (j+d20)*dy;
@@ -160,22 +171,22 @@ package
 						{
 							x1=x20;
 							y1=y20;
-							x2=x40;
-							y2=y40;
+							x2=x04;
+							y2=y04;
 						}
 						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
 						{
-							x1=x40;
-							y1=y40;
-							x2=x42;
-							y2=y42;
+							x1=x04;
+							y1=y04;
+							x2=x24;
+							y2=y24;
 						}
 						else if (intersection==1||intersection==4)
 						{
 							x1=x20;
 							y1=y20;
-							x2=x42;
-							y2=y42;								
+							x2=x24;
+							y2=y24;								
 						}
 						g.moveTo(x1,y1);
 						g.lineTo(x2,y2);
@@ -187,13 +198,13 @@ package
 						{
 							x1=x10;
 							y1=y10;
-							x2=x40;
-							y2=y40;
+							x2=x04;
+							y2=y04;
 						}
 						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
 						{
-							x1=x40;
-							y1=y40;
+							x1=x04;
+							y1=y04;
 							x2=x14;
 							y2=y14;
 						}
@@ -239,15 +250,15 @@ package
 						intersection = getTriangleIntersectionType(p3,p4,p2,contourValue);
 						if ((intersection==1&&p2>contourValue)||(intersection==4&&p2<contourValue))
 						{
-							x1=x42;
-							y1=y42;
+							x1=x24;
+							y1=y24;
 							x2=x32;
 							y2=y32;
 						}
 						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
 						{
-							x1=x42;
-							y1=y42;
+							x1=x24;
+							y1=y24;
 							x2=x34;
 							y2=y34;
 						}
