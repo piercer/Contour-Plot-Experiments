@@ -11,7 +11,7 @@ package
 
 		private static const WIDTH:Number = 600;
 		private static const HEIGHT:Number = 600;
-		private static const NPOINTS:Number = 10;
+		private static const NPOINTS:Number = 20;
 
 		private var _data:Array;
 		private var _zmax:Number;
@@ -27,7 +27,7 @@ package
 				{
 					var d:Number=Math.sqrt((i-50)*(i-50)+(j-50)*(j-50));
 					var d2:Number=Math.sqrt((i-150)*(i-150)+(j-50)*(j-50));
-					_data[i][j] = Math.sin(d*Math.PI/10)*200+Math.cos(d2*Math.PI/10)*200;
+					_data[i][j] = Math.random()*50+Math.sin(d*Math.PI/10)*200+Math.cos(d2*Math.PI/10)*200;
 				}
 			}
 			plotContours(20);
@@ -107,6 +107,8 @@ package
 			var x2:Number;
 			var y1:Number;
 			var y2:Number;
+			g.lineStyle(1,0x000000);
+
 			for (i=0;i<NPOINTS-1;i++)
 			{
 
@@ -121,249 +123,143 @@ package
 					for (k=0;k<nContours;k++)
 					{
 						var contourValue:Number = contourValues[k];
+						var d40:Number = 0.5*(contourValue-p0)/(p4-p0);
+						var d42:Number = 0.5*(contourValue-p2)/(p4-p2);
+						var d14:Number = 0.5*(contourValue-p4)/(p1-p4);
+						var d34:Number = 0.5*(contourValue-p4)/(p3-p4);
+						var d20:Number = (contourValue-p0)/(p2-p0);
+						var d10:Number = (contourValue-p0)/(p1-p0);
+						var d31:Number = (contourValue-p1)/(p3-p1);
+						var d32:Number = (contourValue-p2)/(p3-p2);
+						var x42:Number = (i+d42)*dx;
+						var y42:Number = (j+1-d42)*dy;
+						var x34:Number = (i+0.5+d34)*dx;
+						var y34:Number = (j+0.5+d34)*dy;
+						var x14:Number = (i+0.5+d14)*dx;
+						var y14:Number = (j+0.5-d14)*dy;
+						var x40:Number = (i+d40)*dx;
+						var y40:Number = (j+d40)*dy;
+						
+						var x20:Number = i*dx;
+						var x31:Number = x20+dx;
+
+						var y10:Number = j*dy;
+						var y32:Number = y10+dy;
+
+						var x32:Number = (i+d32)*dx;
+						var y31:Number = (j+d31)*dy;
+						var y20:Number = (j+d20)*dy;
+						var x10:Number = (i+d10)*dx;
+
 						var intersection:uint;
-						g.lineStyle(1,0x000000);
 						//
 						//triangle 1
 						//
 						intersection = getTriangleIntersectionType(p0,p4,p2,contourValue);
-						var d40:Number = (contourValue-p0)/(p4-p0);
-						var d20:Number = (contourValue-p0)/(p2-p0);
-						var d42:Number = (contourValue-p2)/(p4-p2);
-						var d24:Number = (contourValue-p4)/(p2-p4);
-						var d10:Number = (contourValue-p0)/(p1-p0);
-						var d01:Number = (contourValue-p1)/(p0-p1);
-						var d41:Number = (contourValue-p1)/(p4-p1);
-						var d14:Number = (contourValue-p4)/(p1-p4);
-						var d31:Number = (contourValue-p1)/(p3-p1);
-						var d34:Number = (contourValue-p4)/(p3-p4);
-						var d32:Number = (contourValue-p2)/(p3-p2);
-						if (intersection==1)
+						if ((intersection==1&&p0>contourValue)||(intersection==4&&p0<contourValue))
 						{
-							if (p0>contourValue)
-							{
-								x1=i*dx;
-								y1=(j+d20)*dy;
-								x2=(i+0.5*d40)*dx;
-								y2=(j+0.5*d40)*dy;
-							}
-							else if (p4>contourValue)
-							{
-								x1=(i+0.5*d40)*dx;
-								y1=(j+0.5*d40)*dy;
-								x2=(i+0.5-0.5*d24)*dx;
-								y2=(j+0.5+0.5*d24)*dy;
-							}
-							else
-							{
-								x1=i*dx;
-								y1=(j+d20)*dy;
-								x2=(i+0.5*d42)*dx;
-								y2=(j+1-0.5*d42)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);
+							x1=x20;
+							y1=y20;
+							x2=x40;
+							y2=y40;
 						}
-						else if (intersection==4)
+						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
 						{
-							if (p0<contourValue)
-							{
-								x1=i*dx;
-								y1=(j+d20)*dy;
-								x2=(i+0.5*d40)*dx;
-								y2=(j+0.5*d40)*dy;
-							}
-							else if (p4<contourValue)
-							{
-								x1=(i+0.5*d40)*dx;
-								y1=(j+0.5*d40)*dy;
-								x2=(i+0.5-0.5*d24)*dx;
-								y2=(j+0.5+0.5*d24)*dy;
-							}
-							else
-							{
-								x1=i*dx;
-								y1=(j+d20)*dy;
-								x2=(i+0.5*d42)*dx;
-								y2=(j+1-0.5*d42)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);
+							x1=x40;
+							y1=y40;
+							x2=x42;
+							y2=y42;
 						}
+						else if (intersection==1||intersection==4)
+						{
+							x1=x20;
+							y1=y20;
+							x2=x42;
+							y2=y42;								
+						}
+						g.moveTo(x1,y1);
+						g.lineTo(x2,y2);
 						//
 						//triangle 2
 						//
 						intersection = getTriangleIntersectionType(p0,p4,p1,contourValue);
-						if (intersection==1)
+						if ((intersection==1&&p0>contourValue)||(intersection==4&&p0<contourValue))
 						{
-							if (p0>contourValue)
-							{
-								x1=(i+d10)*dx;
-								y1=j*dy;
-								x2=(i+0.5*d40)*dx;
-								y2=(j+0.5*d40)*dy;
-							}
-							else if (p4>contourValue)
-							{
-								x1=(i+0.5*d40)*dx;
-								y1=(j+0.5*d40)*dy;
-								x2=(i+0.5+0.5*d14)*dx;
-								y2=(j+0.5-0.5*d14)*dy;
-							}
-							else
-							{
-								x1=(i+1-d01)*dx;
-								y1=j*dy;
-								x2=(i+0.5+0.5*d14)*dx;
-								y2=(j+0.5-0.5*d14)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);
+							x1=x10;
+							y1=y10;
+							x2=x40;
+							y2=y40;
 						}
-						else if (intersection==4)
+						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
 						{
-							if (p0<contourValue)
-							{
-								x1=(i+d10)*dx;
-								y1=j*dy;
-								x2=(i+0.5*d40)*dx;
-								y2=(j+0.5*d40)*dy;
-							}
-							else if (p4<contourValue)
-							{
-								x1=(i+0.5*d40)*dx;
-								y1=(j+0.5*d40)*dy;
-								x2=(i+0.5+0.5*d14)*dx;
-								y2=(j+0.5-0.5*d14)*dy;
-							}
-							else
-							{
-								x1=(i+1-d01)*dx;
-								y1=j*dy;
-								x2=(i+0.5+0.5*d14)*dx;
-								y2=(j+0.5-0.5*d14)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);							
+							x1=x40;
+							y1=y40;
+							x2=x14;
+							y2=y14;
 						}
+						else if (intersection==1||intersection==4)
+						{
+							x1=x10;
+							y1=y10;
+							x2=x14;
+							y2=y14;								
+						}
+						g.moveTo(x1,y1);
+						g.lineTo(x2,y2);
 						//
 						//triangle 3
 						//
 						intersection = getTriangleIntersectionType(p1,p4,p3,contourValue);
-						if (intersection==1)
+						if ((intersection==1&&p1>contourValue)||(intersection==4&&p1<contourValue))
 						{
-							if (p1>contourValue)
-							{
-								x1=(i+0.5+0.5*d14)*dx;
-								y1=(j+0.5-0.5*d14)*dy;
-								x2=(i+1)*dx;
-								y2=(j+d31)*dy;
-							}
-							else if (p4>contourValue)
-							{
-								x1=(i+0.5+0.5*d14)*dx;
-								y1=(j+0.5-0.5*d14)*dy;
-								x2=(i+0.5+0.5*d34)*dx;
-								y2=(j+0.5+0.5*d34)*dy;
-							}
-							else
-							{
-								x1=(i+0.5+0.5*d34)*dx;
-								y1=(j+0.5+0.5*d34)*dy;
-								x2=(i+1)*dx;
-								y2=(j+d31)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);
+							x1=x14;
+							y1=y14;
+							x2=x31;
+							y2=y31;
 						}
-						else if (intersection==4)
+						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
 						{
-							if (p1<contourValue)
-							{
-								x1=(i+0.5+0.5*d14)*dx;
-								y1=(j+0.5-0.5*d14)*dy;
-								x2=(i+1)*dx;
-								y2=(j+d31)*dy;
-							}
-							else if (p4<contourValue)
-							{
-								x1=(i+0.5+0.5*d14)*dx;
-								y1=(j+0.5-0.5*d14)*dy;
-								x2=(i+0.5+0.5*d34)*dx;
-								y2=(j+0.5+0.5*d34)*dy;
-							}
-							else
-							{
-								x1=(i+0.5+0.5*d34)*dx;
-								y1=(j+0.5+0.5*d34)*dy;
-								x2=(i+1)*dx;
-								y2=(j+d31)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);
+							x1=x14;
+							y1=y14;
+							x2=x34;
+							y2=y34;
 						}
+						else if (intersection==1||intersection==4)
+						{
+							x1=x34;
+							y1=y34;
+							x2=x31;
+							y2=y31;								
+						}
+						g.moveTo(x1,y1);
+						g.lineTo(x2,y2);
 						//
 						//triangle 4
 						//
 						intersection = getTriangleIntersectionType(p3,p4,p2,contourValue);
-						if (intersection==1)
+						if ((intersection==1&&p2>contourValue)||(intersection==4&&p2<contourValue))
 						{
-							if (p2>contourValue)
-							{
-								x1=(i+0.5*d42)*dx;
-								y1=(j+1-0.5*d42)*dy;
-								x2=(i+d32)*dx;
-								y2=(j+1)*dy;
-							}
-							else if (p4>contourValue)
-							{
-								x1=(i+0.5*d42)*dx;
-								y1=(j+1-0.5*d42)*dy;
-								x2=(i+0.5+0.5*d34)*dx;
-								y2=(j+0.5+0.5*d34)*dy;
-							}
-							else
-							{
-								x1=(i+0.5+0.5*d34)*dx;
-								y1=(j+0.5+0.5*d34)*dy;
-								x2=(i+d32)*dx;
-								y2=(j+1)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);
+							x1=x42;
+							y1=y42;
+							x2=x32;
+							y2=y32;
 						}
-						else if (intersection==4)
+						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
 						{
-							x1=0;
-							y1=0;
-							x2=0;
-							y2=0;
-							if (p2<contourValue)
-							{
-								x1=(i+0.5*d42)*dx;
-								y1=(j+1-0.5*d42)*dy;
-								x2=(i+d32)*dx;
-								y2=(j+1)*dy;
-							}
-							else if (p4<contourValue)
-							{
-								x1=(i+0.5*d42)*dx;
-								y1=(j+1-0.5*d42)*dy;
-								x2=(i+0.5+0.5*d34)*dx;
-								y2=(j+0.5+0.5*d34)*dy;
-							}
-							else
-							{
-								x1=(i+0.5+0.5*d34)*dx;
-								y1=(j+0.5+0.5*d34)*dy;
-								x2=(i+d32)*dx;
-								y2=(j+1)*dy;								
-							}
-							g.moveTo(x1,y1);
-							g.lineTo(x2,y2);
+							x1=x42;
+							y1=y42;
+							x2=x34;
+							y2=y34;
 						}
-						
-
+						else if (intersection==1||intersection==4)
+						{
+							x1=x34;
+							y1=y34;
+							x2=x32;
+							y2=y32;								
+						}
+						g.moveTo(x1,y1);
+						g.lineTo(x2,y2);
 					}
 				}
 			}
