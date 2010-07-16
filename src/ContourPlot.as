@@ -3,6 +3,7 @@ package
 
 	import flash.display.Graphics;
 	import flash.display.Sprite;
+	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	
 	[SWF(height="600",width="600")]
@@ -11,7 +12,7 @@ package
 
 		private static const WIDTH:Number = 600;
 		private static const HEIGHT:Number = 600;
-		private static const NPOINTS:Number = 50;
+		private static const NPOINTS:Number = 15;
 
 		private var _data:Array;
 		private var _zmax:Number;
@@ -30,7 +31,7 @@ package
 					_data[i][j] = Math.sin(d*Math.PI/10)*200+Math.cos(d2*Math.PI/10)*200;
 				}
 			}
-			plotContours(20);
+			plotContours(10);
 		}
 		
 		private function plotContours(nContours:uint):void
@@ -102,12 +103,16 @@ package
 				}
 			}
 			
-			
-			var x1:Number;
-			var x2:Number;
-			var y1:Number;
-			var y2:Number;
-			g.lineStyle(1,0x000000);
+//			var slices:Vector.<Sprite> = new Vector.<Sprite>(nContours);
+//			for (i=0;i<nContours;i++)
+//			{
+//				var slice:Sprite = new Sprite();
+//				addChild(slice);
+//				slice.cacheAsBitmap=true;
+//				slices[i]=slice;
+//				slice.addEventListener(MouseEvent.MOUSE_OVER,onMouseOver);
+//				slice.addEventListener(MouseEvent.MOUSE_OUT,onMouseOut);
+//			}
 
 			for (i=0;i<NPOINTS-1;i++)
 			{
@@ -127,9 +132,22 @@ package
 					var jm:Number = j+0.5;
 					var y10:Number = j*dy;
 					var y32:Number = y10+dy;
+					
+					var dp04:Number = p0-p4;
+					var dp14:Number = p1-p4;
+					var dp24:Number = p2-p4;
+					var dp34:Number = p3-p4;
+					var dp20:Number = p2-p0;
+					var dp10:Number = p1-p0;
+					var dp31:Number = p3-p1;
+					var dp32:Number = p3-p2;
 
 					for (k=0;k<nContours;k++)
 					{
+						//g=slices[k].graphics;
+						g=graphics;
+						g.lineStyle(1,0x000000);
+
 						var contourValue:Number = contourValues[k];
 
 						var dp0:Number = contourValue-p0;
@@ -137,15 +155,15 @@ package
 						var dp2:Number = contourValue-p2;
 						var dp4:Number = 0.5*(contourValue-p4);
 						
-						var d04:Number = dp4/(p0-p4);
-						var d14:Number = dp4/(p1-p4);
-						var d24:Number = dp4/(p2-p4);
-						var d34:Number = dp4/(p3-p4);
+						var d04:Number = dp4/dp04;
+						var d14:Number = dp4/dp14;
+						var d24:Number = dp4/dp24;
+						var d34:Number = dp4/dp34;
 						
-						var d20:Number = dp0/(p2-p0);
-						var d10:Number = dp0/(p1-p0);
-						var d31:Number = dp1/(p3-p1);
-						var d32:Number = dp2/(p3-p2);
+						var d20:Number = dp0/dp20;
+						var d10:Number = dp0/dp10;
+						var d31:Number = dp1/dp31;
+						var d32:Number = dp2/dp32;
 												
 						var x24:Number = (im-d24)*dx;
 						var y24:Number = (jm+d24)*dy;
@@ -166,153 +184,105 @@ package
 						//
 						//triangle 1
 						//
-						intersection = getTriangleIntersectionType(p0,p4,p2,contourValue);
-						if ((intersection==1&&p0>contourValue)||(intersection==4&&p0<contourValue))
-						{
-							x1=x20;
-							y1=y20;
-							x2=x04;
-							y2=y04;
-						}
-						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
-						{
-							x1=x04;
-							y1=y04;
-							x2=x24;
-							y2=y24;
-						}
-						else if (intersection==1||intersection==4)
-						{
-							x1=x20;
-							y1=y20;
-							x2=x24;
-							y2=y24;								
-						}
-						g.moveTo(x1,y1);
-						g.lineTo(x2,y2);
+						renderTriangle(p0,p4,p2,contourValue,x20,y20,x04,y04,x24,y24,g);
 						//
 						//triangle 2
 						//
-						intersection = getTriangleIntersectionType(p0,p4,p1,contourValue);
-						if ((intersection==1&&p0>contourValue)||(intersection==4&&p0<contourValue))
-						{
-							x1=x10;
-							y1=y10;
-							x2=x04;
-							y2=y04;
-						}
-						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
-						{
-							x1=x04;
-							y1=y04;
-							x2=x14;
-							y2=y14;
-						}
-						else if (intersection==1||intersection==4)
-						{
-							x1=x10;
-							y1=y10;
-							x2=x14;
-							y2=y14;								
-						}
-						g.moveTo(x1,y1);
-						g.lineTo(x2,y2);
+						renderTriangle(p0,p4,p1,contourValue,x10,y10,x04,y04,x14,y14,g);
 						//
 						//triangle 3
 						//
-						intersection = getTriangleIntersectionType(p1,p4,p3,contourValue);
-						if ((intersection==1&&p1>contourValue)||(intersection==4&&p1<contourValue))
-						{
-							x1=x14;
-							y1=y14;
-							x2=x31;
-							y2=y31;
-						}
-						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
-						{
-							x1=x14;
-							y1=y14;
-							x2=x34;
-							y2=y34;
-						}
-						else if (intersection==1||intersection==4)
-						{
-							x1=x34;
-							y1=y34;
-							x2=x31;
-							y2=y31;								
-						}
-						g.moveTo(x1,y1);
-						g.lineTo(x2,y2);
+						renderTriangle(p1,p4,p3,contourValue,x31,y31,x14,y14,x34,y34,g);
 						//
 						//triangle 4
 						//
-						intersection = getTriangleIntersectionType(p3,p4,p2,contourValue);
-						if ((intersection==1&&p2>contourValue)||(intersection==4&&p2<contourValue))
-						{
-							x1=x24;
-							y1=y24;
-							x2=x32;
-							y2=y32;
-						}
-						else if ((intersection==1&&p4>contourValue)||(intersection==4&&p4<contourValue))
-						{
-							x1=x24;
-							y1=y24;
-							x2=x34;
-							y2=y34;
-						}
-						else if (intersection==1||intersection==4)
-						{
-							x1=x34;
-							y1=y34;
-							x2=x32;
-							y2=y32;								
-						}
-						g.moveTo(x1,y1);
-						g.lineTo(x2,y2);
+						renderTriangle(p2,p4,p3,contourValue,x32,y32,x24,y24,x34,y34,g);
 					}
 				}
 			}
 			
 		}
+
+		private function onMouseOut(event:MouseEvent):void
+		{
+			var slice:Sprite = Sprite(event.target);
+			slice.alpha=1;			
+		}
+
+		private function onMouseOver(event:MouseEvent):void
+		{
+			var slice:Sprite = Sprite(event.target);
+			slice.alpha=0.5;
+		}
+
+		private function renderTriangle(p0:Number, p1:Number, p2:Number, contourValue:Number, x02:Number, y02:Number, x01:Number, y01:Number, x12:Number, y12:Number, g:Graphics):void
+		{
+			var x1:Number;
+			var y1:Number;
+			var x2:Number;
+			var y2:Number;
+			var intersection:uint = getTriangleIntersectionType(p0,p1,p2,contourValue);
+			if ((intersection==1&&p0>contourValue)||(intersection==4&&p0<contourValue))
+			{
+				x1=x01;
+				y1=y01;
+				x2=x02;
+				y2=y02;
+			}
+			else if ((intersection==1&&p1>contourValue)||(intersection==4&&p1<contourValue))
+			{
+				x1=x01;
+				y1=y01;
+				x2=x12;
+				y2=y12;
+			}
+			else if (intersection==1||intersection==4)
+			{
+				x1=x02;
+				y1=y02;
+				x2=x12;
+				y2=y12;								
+			}
+			g.moveTo(x1,y1);
+			g.lineTo(x2,y2);
+		}
+
 				
 		private function getTriangleIntersectionType(p1:Number,p2:Number,p3:Number,value:Number):uint
 		{
-			var type:uint=0;
 			var nAbove:uint=0;
 			var nBelow:uint=0;
 			var nEqual:uint=0;
 			if (p1<value) nBelow++;
+			else if (p1>value) nAbove++;
+			else nEqual++;
 			if (p2<value) nBelow++;
+			else if (p2>value) nAbove++;
+			else nEqual++;
 			if (p3<value) nBelow++;
-			if (p1>value) nAbove++;
-			if (p2>value) nAbove++;
-			if (p3>value) nAbove++;
-			if (p1==value) nEqual++;
-			if (p2==value) nEqual++;
-			if (p3==value) nEqual++;
+			else if (p3>value) nAbove++;
+			else nEqual++;
 			if (nBelow==2&&nAbove==1)
 			{
-				type=1;
-			}
-			else if (nBelow==1&&nEqual==2)
-			{
-				type=2;
-			}
-			else if (nBelow==1&&nAbove==1&&nEqual==1)
-			{
-				type=3;
+				return 1;
 			}
 			else if (nBelow==1&&nAbove==2)
 			{
-				type=4;
+				return 4;
+			}
+			else if (nBelow==1&&nAbove==1&&nEqual==1)
+			{
+				return 3;
+			}
+			else if (nBelow==1&&nEqual==2)
+			{
+				return 2;
 			}
 			else if (nAbove==1&&nEqual==2)
 			{
-				type=5;
+				return 5;
 			}			
-			return type;
+			return 0;
 		}
 	}
 
