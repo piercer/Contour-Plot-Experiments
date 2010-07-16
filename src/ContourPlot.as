@@ -180,7 +180,6 @@ package
 						var y20:Number = (j+d20)*dy;
 						var x10:Number = (i+d10)*dx;
 
-						var intersection:uint;
 						//
 						//triangle 1
 						//
