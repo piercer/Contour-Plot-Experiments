@@ -13,11 +13,15 @@ package
 
 		private static const WIDTH:Number = 600;
 		private static const HEIGHT:Number = 600;
-		private static const NPOINTS:Number = 30;
+		private static const NPOINTS:Number = 50;
 
 		private var _data:Array;
 		private var _zmax:Number;
 		private var _zmin:Number;
+		private var _contourValue:Number;
+		private var _checkedEdges:Array;
+		private var _dx:Number;
+		private var _dy:Number;
 		
 		public function ContourPlot()
 		{
@@ -44,8 +48,8 @@ package
 			var y:Number;
 			var gradient:Number;
 			
-			var dx:Number = WIDTH/(NPOINTS-1);
-			var dy:Number = HEIGHT/(NPOINTS-1);
+			_dx = WIDTH/(NPOINTS-1);
+			_dy = HEIGHT/(NPOINTS-1);
 			
 			_zmin=_data[0][0];
 			_zmax=_zmin;
@@ -81,26 +85,26 @@ package
 			
 			for (i=0;i<NPOINTS;i++)
 			{
-				x=i*dx;
+				x=i*_dx;
 				g.moveTo(x,0);
 				g.lineTo(x,HEIGHT);
 			}
 			for (i=0;i<NPOINTS;i++)
 			{
-				y=i*dy;
+				y=i*_dy;
 				g.moveTo(0,y);
 				g.lineTo(WIDTH,y);
 			}
 			for (i=0;i<NPOINTS;i++)
 			{
-				x=i*dx;
+				x=i*_dx;
 				for (j=0;j<NPOINTS;j++)
 				{
-					y=j*dy;
+					y=j*_dy;
 					g.moveTo(x,y);
-					g.lineTo(x+dx,y+dy);
-					g.moveTo(x+dx,y);
-					g.lineTo(x,y+dy);
+					g.lineTo(x+_dx,y+_dy);
+					g.moveTo(x+_dx,y);
+					g.lineTo(x,y+_dy);
 				}
 			}
 			
@@ -110,170 +114,330 @@ package
 			var np:uint = NPOINTS-1;
 
 			var startTime:int = getTimer();
-
+			
+			_checkedEdges = [];
 			for (i=0;i<np;i++)
 			{
-				
-				var im:Number = i+0.5;
-				var x20:Number = i*dx;
-				var x31:Number = x20+dx;
-				
+				_checkedEdges[i]=[];
 				for (j=0;j<np;j++)
 				{
-					
-					var p0:Number = _data[i][j];
-					var p1:Number = _data[i+1][j];
-					var p2:Number = _data[i][j+1];
-					var p3:Number = _data[i+1][j+1];
-					var p4:Number = (p0+p1+p2+p3)/4;
-					var jm:Number = j+0.5;
-					var y10:Number = j*dy;
-					var y32:Number = y10+dy;
-					
-					var dp04:Number = p0-p4;
-					var dp14:Number = p1-p4;
-					var dp24:Number = p2-p4;
-					var dp34:Number = p3-p4;
-					var dp20:Number = p2-p0;
-					var dp10:Number = p1-p0;
-					var dp31:Number = p3-p1;
-					var dp32:Number = p3-p2;
-
+					_checkedEdges[i][j]=[];
 					for (k=0;k<nContours;k++)
 					{
-						
-						var contourValue:Number = contourValues[k];
-
-						if ((p0>contourValue&&p1>contourValue&&p2>contourValue&&p3>contourValue)||
-							(p0<contourValue&&p1<contourValue&&p2<contourValue&&p3<contourValue))
-						{
-							continue;
-						}
-
-						
-						var dp0:Number = contourValue-p0;
-						var dp1:Number = contourValue-p1;
-						var dp2:Number = contourValue-p2;
-						var dp4:Number = 0.5*(contourValue-p4);
-						
-						var d04:Number = dp4/dp04;
-						var d14:Number = dp4/dp14;
-						var d24:Number = dp4/dp24;
-						var d34:Number = dp4/dp34;
-						
-						var d20:Number = dp0/dp20;
-						var d10:Number = dp0/dp10;
-						var d31:Number = dp1/dp31;
-						var d32:Number = dp2/dp32;
-												
-						var x24:Number = (im-d24)*dx;
-						var y24:Number = (jm+d24)*dy;
-						
-						var x34:Number = (im+d34)*dx;
-						var y34:Number = (jm+d34)*dy;
-						var x14:Number = (im+d14)*dx;
-						var y14:Number = (jm-d14)*dy;
-						var x04:Number = (im-d04)*dx;
-						var y04:Number = (jm-d04)*dy;
-						
-						var x32:Number = (i+d32)*dx;
-						var y31:Number = (j+d31)*dy;
-						var y20:Number = (j+d20)*dy;
-						var x10:Number = (i+d10)*dx;
-
-						//
-						//triangle 1
-						//
-						renderTriangle(p0,p4,p2,contourValue,x20,y20,x04,y04,x24,y24,g);
-						//
-						//triangle 2
-						//
-						renderTriangle(p0,p4,p1,contourValue,x10,y10,x04,y04,x14,y14,g);
-						//
-						//triangle 3
-						//
-						renderTriangle(p1,p4,p3,contourValue,x31,y31,x14,y14,x34,y34,g);
-						//
-						//triangle 4
-						//
-						renderTriangle(p2,p4,p3,contourValue,x32,y32,x24,y24,x34,y34,g);
+						_checkedEdges[i][j][k]=[];
 					}
 				}
 			}
 			
-			trace("Render Time: "+(getTimer()-startTime)/1000);
-			
+			for (i=0;i<np;i++)
+			{				
+				for (k=0;k<nContours;k++)
+				{
+					_contourValue = contourValues[k];
+					graphics.lineStyle(1,Math.random()*0xFFFFFF);
+					checkEdge2(i,0,k,true);
+					checkEdge4(i,np-1,k,true);
+				}				
+			}
+			for (j=0;j<np;j++)
+			{				
+				for (k=0;k<nContours;k++)
+				{
+					_contourValue = contourValues[k];
+					graphics.lineStyle(1,Math.random()*0xFFFFFF);
+					checkEdge1(0,j,k,true);
+					checkEdge3(0,np-1,k,true);
+				}				
+			}
+
+		}
+		
+		private function checkEdge1(i:uint,j:uint,k:uint,start:Boolean=false):String
+		{
+			if (_checkedEdges[i][j][k][1])
+			{
+				return "";
+			}
+			_checkedEdges[i][j][k][1]=true;
+			var p0:Number = _data[i][j];
+			var p2:Number = _data[i][j+1];
+			if ((p0<_contourValue&&p2>_contourValue)||(p0>_contourValue&&p2<_contourValue))
+			{
+				var dp0:Number = _contourValue-p0;
+				var dp20:Number = p2-p0;				
+				var d20:Number = dp0/dp20;				
+				var x20:Number = i*_dx;
+				var y20:Number = (j+d20)*_dy;
+				if (start)
+				{
+					graphics.moveTo(x20,y20);
+				}
+				else
+				{
+					graphics.lineTo(x20,y20);					
+				}
+				checkEdge5(i,j,k,1);
+				checkEdge7(i,j,k,1);
+			}
+			return "";
+		}
+		
+		private function checkEdge2(i:uint,j:uint,k:uint,start:Boolean=false):String
+		{
+			if (_checkedEdges[i][j][k][2])
+			{
+				return "";
+			}
+			_checkedEdges[i][j][k][2]=true;
+			var p0:Number = _data[i][j];
+			var p1:Number = _data[i+1][j];
+			if ((p0<_contourValue&&p1>_contourValue)||(p0>_contourValue&&p1<_contourValue))
+			{
+				var dp0:Number = _contourValue-p0;
+				var dp10:Number = p1-p0;
+				var d10:Number = dp0/dp10;
+				var x10:Number = (i+d10)*_dx;
+				var y10:Number = j*_dy;
+
+				if (start)
+				{
+					graphics.moveTo(x10,y10);					
+				}
+				else
+				{
+					graphics.lineTo(x10,y10);					
+				}
+				checkEdge5(i,j,k,2);
+				checkEdge6(i,j,k,2);
+			}
+			return "";
 		}
 
-		private function renderTriangle(p0:Number, p1:Number, p2:Number, contourValue:Number, x02:Number, y02:Number, x01:Number, y01:Number, x12:Number, y12:Number, g:Graphics):void
+		private function checkEdge3(i:uint,j:uint,k:uint,start:Boolean=false):String
 		{
-			var x1:Number;
-			var y1:Number;
-			var x2:Number;
-			var y2:Number;
-			var intersection:uint = getTriangleIntersectionType(p0,p1,p2,contourValue);
-			if ((intersection==1&&p0>contourValue)||(intersection==4&&p0<contourValue))
+			if (_checkedEdges[i][j][k][3])
 			{
-				x1=x01;
-				y1=y01;
-				x2=x02;
-				y2=y02;
+				return "";
 			}
-			else if ((intersection==1&&p1>contourValue)||(intersection==4&&p1<contourValue))
+			_checkedEdges[i][j][k][3]=true;
+			var p1:Number = _data[i+1][j];
+			var p3:Number = _data[i+1][j+1];
+			if ((p1<_contourValue&&p3>_contourValue)||(p1>_contourValue&&p3<_contourValue))
 			{
-				x1=x01;
-				y1=y01;
-				x2=x12;
-				y2=y12;
+				var dp1:Number = _contourValue-p1;
+				var dp31:Number = p3-p1;
+				var d31:Number = dp1/dp31;
+				var x31:Number = (i+1)*_dx;
+				var y31:Number = (j+d31)*_dy;
+				if (start)
+				{
+					graphics.moveTo(x31,y31);
+				}
+				else
+				{
+					graphics.lineTo(x31,y31);					
+				}
+				checkEdge6(i,j,k,3);
+				checkEdge8(i,j,k,3);
 			}
-			else if (intersection==1||intersection==4)
-			{
-				x1=x02;
-				y1=y02;
-				x2=x12;
-				y2=y12;								
-			}
-			g.moveTo(x1,y1);
-			g.lineTo(x2,y2);
+			return "";
 		}
-
-				
-		private function getTriangleIntersectionType(p1:Number,p2:Number,p3:Number,value:Number):uint
+		
+		private function checkEdge4(i:uint,j:uint,k:uint,start:Boolean=false):String
 		{
-			var nAbove:uint=0;
-			var nBelow:uint=0;
-			var nEqual:uint=0;
-			if (p1<value) nBelow++;
-			else if (p1>value) nAbove++;
-			else nEqual++;
-			if (p2<value) nBelow++;
-			else if (p2>value) nAbove++;
-			else nEqual++;
-			if (p3<value) nBelow++;
-			else if (p3>value) nAbove++;
-			else nEqual++;
-			if (nBelow==2&&nAbove==1)
+			if (_checkedEdges[i][j][k][4])
 			{
-				return 1;
+				return "";
 			}
-			else if (nBelow==1&&nAbove==2)
+			_checkedEdges[i][j][k][4]=true;
+			var p2:Number = _data[i][j+1];
+			var p3:Number = _data[i+1][j+1];
+			if ((p2<_contourValue&&p3>_contourValue)||(p2>_contourValue&&p3<_contourValue))
 			{
-				return 4;
+				var dp2:Number = _contourValue-p2;
+				var dp32:Number = p3-p2;
+				var d32:Number = dp2/dp32;			
+				var x32:Number = (i+d32)*_dx;
+				var y32:Number = (j+1)*_dy;
+				if (start)
+				{
+					graphics.moveTo(x32,y32);					
+				}
+				else
+				{
+					graphics.lineTo(x32,y32);
+				}
+				graphics.lineTo(x32,y32);
+				checkEdge7(i,j,k,4);
+				checkEdge8(i,j,k,4);
 			}
-			else if (nBelow==1&&nAbove==1&&nEqual==1)
+			return "";
+		}
+		
+		private function checkEdge5(i:uint,j:uint,k:uint,outsideEdge:uint):String
+		{
+			if (_checkedEdges[i][j][k][5])
 			{
-				return 3;
+				return "";
 			}
-			else if (nBelow==1&&nEqual==2)
+			_checkedEdges[i][j][k][5]=true;
+			var p0:Number = _data[i][j];
+			var p1:Number = _data[i+1][j];
+			var p2:Number = _data[i][j+1];
+			var p3:Number = _data[i+1][j+1];
+			var p4:Number = (p0+p1+p2+p3)/4;
+			if ((p0<_contourValue&&p4>_contourValue)||(p0>_contourValue&&p4<_contourValue))
 			{
-				return 2;
+				var dp4:Number = 0.5*(_contourValue-p4);
+				var dp04:Number = p0-p4;
+				var d04:Number = dp4/dp04;
+				var x04:Number = (i+0.5-d04)*_dx;
+				var y04:Number = (j+0.5-d04)*_dy;
+
+				graphics.lineTo(x04,y04);
+				if (outsideEdge==1||outsideEdge==7)
+				{
+					if (j>0)
+					{
+						checkEdge4(i,j-1,k);
+					}
+					checkEdge6(i,j,k,5);
+				}
+				else
+				{
+					if (i>0)
+					{
+						checkEdge3(i-1,j,k);
+					}
+					checkEdge7(i,j,k,5);
+				}
 			}
-			else if (nAbove==1&&nEqual==2)
+			return "";
+		}
+		
+		private function checkEdge6(i:uint,j:uint,k:uint,outsideEdge:uint):String
+		{
+			if (_checkedEdges[i][j][k][6])
 			{
-				return 5;
+				return "";
+			}
+			_checkedEdges[i][j][k][6]=true;
+			var p0:Number = _data[i][j];
+			var p1:Number = _data[i+1][j];
+			var p2:Number = _data[i][j+1];
+			var p3:Number = _data[i+1][j+1];
+			var p4:Number = (p0+p1+p2+p3)/4;
+			if ((p1<_contourValue&&p4>_contourValue)||(p1>_contourValue&&p4<_contourValue))
+			{
+				var dp14:Number = p1-p4;
+				var dp4:Number = 0.5*(_contourValue-p4);
+				var d14:Number = dp4/dp14;
+				var x14:Number = (i+0.5+d14)*_dx;
+				var y14:Number = (j+0.5-d14)*_dy;
+
+				graphics.lineTo(x14,y14);
+				if (outsideEdge==2||outsideEdge==5)
+				{
+					if (i<NPOINTS-2)
+					{
+						checkEdge1(i+1,j,k);
+					}
+					checkEdge8(i,j,k,6);
+				}
+				else
+				{
+					checkEdge5(i,j,k,6);
+					if (j>0)
+					{
+						checkEdge4(i,j-1,k);
+					}
+				}
+			}
+			return "";
+		}
+		
+		private function checkEdge7(i:uint,j:uint,k:uint,outsideEdge:uint):String
+		{
+			if (_checkedEdges[i][j][k][7])
+			{
+				return "";
+			}
+			_checkedEdges[i][j][k][7]=true;
+			var p0:Number = _data[i][j];
+			var p1:Number = _data[i+1][j];
+			var p2:Number = _data[i][j+1];
+			var p3:Number = _data[i+1][j+1];
+			var p4:Number = (p0+p1+p2+p3)/4;
+			if ((p2<_contourValue&&p4>_contourValue)||(p2>_contourValue&&p4<_contourValue))
+			{
+				var dp4:Number = 0.5*(_contourValue-p4);
+				var dp24:Number = p2-p4;
+				var d24:Number = dp4/dp24;
+				var x24:Number = (i+0.5-d24)*_dx;
+				var y24:Number = (j+0.5+d24)*_dy;
+
+				graphics.lineTo(x24,y24);
+				if (outsideEdge==4||outsideEdge==8)
+				{
+					checkEdge5(i,j,k,7);
+					if (j>0)
+					{
+						checkEdge3(i-1,j,k);						
+					}
+				}
+				else
+				{
+					if (j<NPOINTS-2)
+					{
+						checkEdge2(i,j+1,k);
+					}
+					checkEdge8(i,j,k,7);
+				}
 			}			
-			return 0;
+			return "";
 		}
+
+		private function checkEdge8(i:uint,j:uint,k:uint,outsideEdge:uint):String
+		{
+			if (_checkedEdges[i][j][k][8])
+			{
+				return "";
+			}
+			_checkedEdges[i][j][k][8]=true;
+			var p0:Number = _data[i][j];
+			var p1:Number = _data[i+1][j];
+			var p2:Number = _data[i][j+1];
+			var p3:Number = _data[i+1][j+1];
+			var p4:Number = (p0+p1+p2+p3)/4;			
+			if ((p3<_contourValue&&p4>_contourValue)||(p3>_contourValue&&p4<_contourValue))
+			{
+				var dp4:Number = 0.5*(_contourValue-p4);
+				var dp34:Number = p3-p4;
+				var d34:Number = dp4/dp34;
+				var x34:Number = (i+0.5+d34)*_dx;
+				var y34:Number = (j+0.5+d34)*_dy;
+
+				graphics.lineTo(x34,y34);
+				if (outsideEdge==4||outsideEdge==7)
+				{
+					if (i<NPOINTS-2)
+					{
+						checkEdge1(i+1,j,k);
+					}
+					checkEdge6(i,j,k,8);
+				}
+				else
+				{
+					if (j<NPOINTS-2)
+					{
+						checkEdge2(i,j+1,k);
+					}
+					checkEdge7(i,j,k,8);
+				}
+			}			
+			return "";
+		}
+
 	}
 
 }
