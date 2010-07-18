@@ -13,7 +13,7 @@ package
 
 		private static const WIDTH:Number = 600;
 		private static const HEIGHT:Number = 600;
-		private static const NPOINTS:Number = 50;
+		private static const NPOINTS:Number = 30;
 
 		private var _data:Array;
 		private var _zmax:Number;
@@ -380,7 +380,7 @@ package
 				if (outsideEdge==4||outsideEdge==8)
 				{
 					checkEdge5(i,j,k,7);
-					if (j>0)
+					if (i>0)
 					{
 						checkEdge3(i-1,j,k);						
 					}
