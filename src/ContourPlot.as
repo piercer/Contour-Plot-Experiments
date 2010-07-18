@@ -5,6 +5,7 @@ package
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import flash.utils.getTimer;
 	
 	[SWF(height="600",width="600")]
 	public class ContourPlot extends Sprite
@@ -12,7 +13,7 @@ package
 
 		private static const WIDTH:Number = 600;
 		private static const HEIGHT:Number = 600;
-		private static const NPOINTS:Number = 15;
+		private static const NPOINTS:Number = 30;
 
 		private var _data:Array;
 		private var _zmax:Number;
@@ -31,7 +32,7 @@ package
 					_data[i][j] = Math.sin(d*Math.PI/10)*200+Math.cos(d2*Math.PI/10)*200;
 				}
 			}
-			plotContours(10);
+			plotContours(30);
 		}
 		
 		private function plotContours(nContours:uint):void
@@ -103,25 +104,21 @@ package
 				}
 			}
 			
-//			var slices:Vector.<Sprite> = new Vector.<Sprite>(nContours);
-//			for (i=0;i<nContours;i++)
-//			{
-//				var slice:Sprite = new Sprite();
-//				addChild(slice);
-//				slice.cacheAsBitmap=true;
-//				slices[i]=slice;
-//				slice.addEventListener(MouseEvent.MOUSE_OVER,onMouseOver);
-//				slice.addEventListener(MouseEvent.MOUSE_OUT,onMouseOut);
-//			}
+			g=graphics;
+			g.lineStyle(1,0x000000);
+			
+			var np:uint = NPOINTS-1;
 
-			for (i=0;i<NPOINTS-1;i++)
+			var startTime:int = getTimer();
+
+			for (i=0;i<np;i++)
 			{
 				
 				var im:Number = i+0.5;
 				var x20:Number = i*dx;
 				var x31:Number = x20+dx;
 				
-				for (j=0;j<NPOINTS-1;j++)
+				for (j=0;j<np;j++)
 				{
 					
 					var p0:Number = _data[i][j];
@@ -144,12 +141,16 @@ package
 
 					for (k=0;k<nContours;k++)
 					{
-						//g=slices[k].graphics;
-						g=graphics;
-						g.lineStyle(1,0x000000);
-
+						
 						var contourValue:Number = contourValues[k];
 
+						if ((p0>contourValue&&p1>contourValue&&p2>contourValue&&p3>contourValue)||
+							(p0<contourValue&&p1<contourValue&&p2<contourValue&&p3<contourValue))
+						{
+							continue;
+						}
+
+						
 						var dp0:Number = contourValue-p0;
 						var dp1:Number = contourValue-p1;
 						var dp2:Number = contourValue-p2;
@@ -200,18 +201,8 @@ package
 				}
 			}
 			
-		}
-
-		private function onMouseOut(event:MouseEvent):void
-		{
-			var slice:Sprite = Sprite(event.target);
-			slice.alpha=1;			
-		}
-
-		private function onMouseOver(event:MouseEvent):void
-		{
-			var slice:Sprite = Sprite(event.target);
-			slice.alpha=0.5;
+			trace("Render Time: "+(getTimer()-startTime)/1000);
+			
 		}
 
 		private function renderTriangle(p0:Number, p1:Number, p2:Number, contourValue:Number, x02:Number, y02:Number, x01:Number, y01:Number, x12:Number, y12:Number, g:Graphics):void
